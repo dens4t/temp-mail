@@ -134,3 +134,31 @@ export async function deleteEmailAttachments(
 		};
 	}
 }
+
+/**
+ * Delete ALL R2 objects (full bucket wipe - for 24h cron)
+ * Handles pagination via truncated + cursor
+ */
+export async function deleteAllR2Objects(
+	r2: R2Bucket,
+): Promise<{ success: boolean; deletedCount: number; error?: Error }> {
+	try {
+		let deletedCount = 0;
+		let cursor: string | undefined = undefined;
+		do {
+			const listed = await r2.list({ cursor });
+			if (listed.objects.length > 0) {
+				await Promise.all(listed.objects.map((obj) => r2.delete(obj.key)));
+				deletedCount += listed.objects.length;
+			}
+			cursor = listed.truncated ? listed.cursor : undefined;
+		} while (cursor);
+		return { success: true, deletedCount };
+	} catch (error) {
+		return {
+			success: false,
+			deletedCount: 0,
+			error: error instanceof Error ? error : new Error(String(error)),
+		};
+	}
+}

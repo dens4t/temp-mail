@@ -1,0 +1,343 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>dst.my.id — Temp Mail</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,ital,wght@9..144,0,600;9..144,1,600&family=JetBrains+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>tailwind.config={theme:{extend:{fontFamily:{display:['Fraunces','serif'],mono:['JetBrains Mono','monospace'],sans:['Instrument Sans','system-ui','sans-serif']}}}}</script>
+<style>
+*{scrollbar-width:thin;scrollbar-color:#d1d5db transparent}
+::-webkit-scrollbar{width:6px;height:6px}::-webkit-scrollbar-thumb{background:#d1d5db;border-radius:999px}
+.glass{backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
+.email-card{transition:all .15s ease}
+.email-card:hover{transform:translateY(-1px)}
+.shimmer{background:linear-gradient(90deg,#f3f4f6 25%,#e5e7eb 50%,#f3f4f6 75%);background-size:200% 100%;animation:shim 1.2s infinite}
+@keyframes shim{0%{background-position:200% 0}100%{background-position:-200% 0}}
+</style>
+</head>
+<body class="bg-[#fbfaf7] text-zinc-900 font-sans antialiased">
+<!-- Top -->
+<header class="sticky top-0 z-30 bg-[#fbfaf7]/80 glass border-b border-zinc-200/60">
+  <div class="max-w-[1480px] mx-auto px-4 sm:px-6 h-[56px] flex items-center justify-between gap-4">
+    <div class="flex items-center gap-3">
+      <div class="w-[32px] h-[32px] rounded-[9px] bg-zinc-900 text-white grid place-items-center font-display text-[15px]">◈</div>
+      <div class="leading-none">
+        <div class="font-display text-[17px] tracking-[-0.02em]">dst.my.id</div>
+        <div class="text-[11px] tracking-[0.14em] uppercase text-zinc-500 font-medium -mt-[1px]">Temp Mail • Cloudflare Workers</div>
+      </div>
+    </div>
+    <div class="flex items-center gap-2">
+      <span id="healthDot" class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+      <span id="healthText" class="text-xs font-mono text-zinc-500">checking…</span>
+      <a href="/docs" target="_blank" class="hidden sm:inline-flex ml-2 text-xs font-medium px-3 py-1.5 rounded-full border border-zinc-200 hover:bg-white transition">API Docs</a>
+    </div>
+  </div>
+</header>
+
+<main class="max-w-[1480px] mx-auto px-4 sm:px-6 py-6 sm:py-8">
+  <!-- Email hero -->
+  <section class="rounded-[24px] bg-white border border-zinc-200 shadow-[0_8px_30px_rgba(0,0,0,0.04)] overflow-hidden">
+    <div class="grid lg:grid-cols-[1.35fr_0.85fr]">
+      <!-- left -->
+      <div class="p-5 sm:p-7">
+        <div class="flex items-center gap-2">
+          <span class="text-[11px] font-semibold tracking-[0.14em] uppercase text-zinc-500">Your temporary address</span>
+          <span class="text-[11px] px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 font-medium">auto-wipe every 24h</span>
+        </div>
+        <div class="mt-3 flex flex-col sm:flex-row gap-2">
+          <div class="flex-1 flex items-center gap-2 rounded-[14px] bg-zinc-900 text-white px-3 sm:px-4 py-3">
+            <input id="prefix" class="flex-1 bg-transparent outline-none font-mono text-[15px] sm:text-[16px] min-w-0" placeholder="namaacak" spellcheck="false"/>
+            <span class="font-mono text-zinc-400 hidden sm:inline">@</span>
+            <select id="domainSel" class="bg-zinc-800 border border-zinc-700 rounded-[10px] px-2 sm:px-3 py-2 font-mono text-[13px] outline-none max-w-[140px]"></select>
+          </div>
+        </div>
+        <div id="fullEmail" class="mt-3 font-mono text-[13px] text-zinc-500 break-all"></div>
+        <div class="mt-4 flex flex-wrap gap-2">
+          <button id="btnCopy" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-zinc-900 text-white text-sm font-medium hover:bg-black transition"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v3"/></svg> Copy</button>
+          <button id="btnRandom" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-white border border-zinc-200 text-sm font-medium hover:bg-zinc-50 transition"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-9-9c2.5 0 4.7 1 6.3 2.7"/><path d="M21 3v7h-7"/></svg> Random</button>
+          <button id="btnRefresh" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-white border border-zinc-200 text-sm font-medium hover:bg-zinc-50 transition"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v-5"/></svg> Refresh</button>
+          <label class="inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-white border border-zinc-200 text-sm cursor-pointer select-none">
+            <input id="autoRefresh" type="checkbox" checked class="accent-zinc-900"> Auto 5s
+          </label>
+        </div>
+        <div class="mt-4 flex items-center gap-2 text-xs text-zinc-500">
+          <span id="inboxMeta" class="font-mono">0 emails • dst.my.id</span>
+          <span class="w-1 h-1 rounded-full bg-zinc-300"></span>
+          <button id="btnDeleteAll" class="text-rose-600 hover:text-rose-700 font-medium">Delete all</button>
+          <span id="copyToast" class="ml-auto hidden text-emerald-600 font-medium">Copied!</span>
+        </div>
+        <div id="historyWrap" class="mt-4 hidden">
+          <div class="flex items-center justify-between">
+            <div class="text-[11px] font-semibold tracking-[0.14em] uppercase text-zinc-500">Your previous emails</div>
+            <button id="btnClearHistory" class="text-[11px] text-zinc-400 hover:text-rose-600">Clear</button>
+          </div>
+          <div id="historyList" class="mt-2 flex flex-wrap gap-1.5"></div>
+        </div>
+      </div>
+      <!-- right how it works -->
+      <div class="bg-[#f6f4ef] border-t lg:border-t-0 lg:border-l border-zinc-200 p-5 sm:p-7">
+        <div class="font-display text-[18px] leading-none">Cara pakai</div>
+        <ol class="mt-3 space-y-2.5 text-sm leading-6 text-zinc-600">
+          <li><span class="inline-grid place-items-center w-6 h-6 rounded-full bg-white border border-zinc-200 text-xs font-semibold mr-2">1</span>Copy alamat di sebelah & pakai untuk daftar / OTP.</li>
+          <li><span class="inline-grid place-items-center w-6 h-6 rounded-full bg-white border border-zinc-200 text-xs font-semibold mr-2">2</span>Email masuk otomatis tiap 5 detik, klik untuk baca.</li>
+          <li><span class="inline-grid place-items-center w-6 h-6 rounded-full bg-white border border-zinc-200 text-xs font-semibold mr-2">3</span>Attachment 50MB tersimpan di R2, auto-wipe 24 jam (00:00 UTC).</li>
+        </ol>
+        <div class="mt-5 rounded-2xl bg-white border border-zinc-200 p-4">
+          <div class="text-xs font-semibold tracking-[0.12em] uppercase text-zinc-500">Powered by</div>
+          <div class="mt-2 flex flex-wrap gap-2 text-xs font-mono">
+            <span class="px-2.5 py-1 rounded-full bg-zinc-900 text-white">Workers Free</span>
+            <span class="px-2.5 py-1 rounded-full bg-white border border-zinc-200">D1 Free</span>
+            <span class="px-2.5 py-1 rounded-full bg-white border border-zinc-200">R2 Free</span>
+            <span class="px-2.5 py-1 rounded-full bg-white border border-zinc-200">Email Routing</span>
+          </div>
+          <div class="mt-3 text-xs text-zinc-500">API: <a class="underline decoration-zinc-300 hover:decoration-zinc-600" href="/health" target="_blank">/health</a> • <span class="font-mono" id="apiBase"></span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- inbox full width -->
+  <section class="mt-6 grid grid-cols-1 gap-6">
+    <div class="rounded-[20px] bg-white border border-zinc-200 overflow-hidden">
+      <div class="px-5 py-4 border-b border-zinc-100 flex items-center justify-between">
+        <div class="font-medium">Inbox</div>
+        <div id="inboxCount" class="text-xs font-mono px-2.5 py-1 rounded-full bg-zinc-900 text-white">0</div>
+      </div>
+      <div id="list" class="divide-y divide-zinc-100 min-h-[160px]"></div>
+      <div id="empty" class="hidden p-8 text-center">
+        <div class="w-12 h-12 mx-auto rounded-2xl bg-[#f6f4ef] grid place-items-center text-zinc-500">✉︎</div>
+        <div class="mt-3 font-medium">Inbox kosong</div>
+        <div class="text-sm text-zinc-500 mt-1">Kirim email ke alamat di atas, akan muncul dalam beberapa detik.</div>
+      </div>
+    </div>
+
+    <div id="detailWrap" class="rounded-[20px] bg-white border border-zinc-200 overflow-hidden">
+      <div class="px-5 py-4 border-b border-zinc-100 flex items-center justify-between">
+        <div class="font-medium">Detail</div>
+        <button id="btnCloseDetail" class="text-xs px-3 py-1.5 rounded-full border border-zinc-200 hover:bg-zinc-50 hidden">Close</button>
+      </div>
+      <div id="detail" class="p-0 sm:p-0">
+        <div class="p-5 text-sm text-zinc-500">Pilih email di atas untuk membaca isi & attachment.</div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="mt-8 text-center text-xs text-zinc-500">© dst.my.id • Temp Mail on Cloudflare Free • Auto wipe 24h 00:00 UTC • <a class="underline" href="https://github.com/vwh/temp-mail" target="_blank">vwh/temp-mail</a></footer>
+</main>
+
+<script>
+const $ = s => document.querySelector(s);
+const api = location.origin;
+$('#apiBase').textContent = api.replace('https://','');
+let currentEmail = '';
+let selectedId = null;
+let timer = null;
+
+// utils
+const rand = (n=10) => Math.random().toString(36).slice(2,2+n).toLowerCase();
+const fmtTime = ts => {
+  const d = new Date(ts*1000 || ts);
+  const now = Date.now();
+  const diff = Math.floor((now - d.getTime())/1000);
+  if(diff < 60) return `${diff}s ago`;
+  if(diff < 3600) return `${Math.floor(diff/60)}m ago`;
+  if(diff < 86400) return `${Math.floor(diff/3600)}h ago`;
+  return d.toLocaleString('id-ID');
+};
+const esc = s => (s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+// state
+function getFull(){ const p = $('#prefix').value.trim() || rand(8); const d = $('#domainSel').value || 'dst.my.id'; return `${p}@${d}`; }
+function setAddress(p,d){
+  $('#prefix').value = p;
+  if(d) $('#domainSel').value = d;
+  updateAddress();
+}
+function updateAddress(){
+  currentEmail = getFull();
+  $('#fullEmail').textContent = currentEmail + '  •  click Copy to use';
+  $('#inboxMeta').textContent = `inbox: ${currentEmail}`;
+  localStorage.setItem('tm_prefix', $('#prefix').value);
+  localStorage.setItem('tm_domain', $('#domainSel').value);
+  addToHistory(currentEmail);
+  selectedId = null;
+  $('#detail').innerHTML = '<div class="p-5 text-sm text-zinc-500">Pilih email di atas untuk membaca isi & attachment.</div>';
+  fetchInbox();
+  updateHash();
+}
+function updateHash(){ location.hash = encodeURIComponent(currentEmail); }
+
+// history - keep last 20 emails
+function getHistory(){ try{ return JSON.parse(localStorage.getItem('tm_history')||'[]'); }catch{ return []; } }
+function addToHistory(email){
+  let h = getHistory();
+  h = [email, ...h.filter(e=>e!==email)].slice(0,20);
+  localStorage.setItem('tm_history', JSON.stringify(h));
+  renderHistory();
+}
+function renderHistory(){
+  const h = getHistory();
+  const wrap = $('#historyWrap'), list = $('#historyList');
+  if(!h.length){ wrap.classList.add('hidden'); return; }
+  wrap.classList.remove('hidden');
+  list.innerHTML = h.map(e=>{
+    const active = e===currentEmail;
+    return `<button data-email="${esc(e)}" class="group inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-mono border ${active?'bg-zinc-900 text-white border-zinc-900':'bg-white border-zinc-200 hover:bg-zinc-50'}"><span class="truncate max-w-[180px]">${esc(e)}</span>${active?'•':''}</button>`;
+  }).join('');
+  list.querySelectorAll('button[data-email]').forEach(b=> b.addEventListener('click',()=>{
+    const em=b.dataset.email; const [p,d]=em.split('@'); setAddress(p,d);
+  }));
+}
+
+// health
+async function checkHealth(){
+  try{ const r=await fetch(api+'/health'); const j=await r.json(); if(j.success){ $('#healthDot').className='w-2 h-2 rounded-full bg-emerald-500'; $('#healthText').textContent='live'; } else throw 0; }catch{ $('#healthDot').className='w-2 h-2 rounded-full bg-rose-500'; $('#healthText').textContent='offline'; }
+}
+
+// domains
+async function loadDomains(){
+  try{
+    const r=await fetch(api+'/domains'); const j=await r.json();
+    const list = j.result || j.data || [];
+    const sel=$('#domainSel'); sel.innerHTML='';
+    list.forEach(d=>{ const o=document.createElement('option'); o.value=d; o.textContent=d; sel.appendChild(o); });
+    const saved = localStorage.getItem('tm_domain');
+    if(saved && list.includes(saved)) sel.value=saved; else if(list.includes('dst.my.id')) sel.value='dst.my.id';
+  }catch{}
+}
+
+// inbox
+async function fetchInbox(){
+  const email = encodeURIComponent(currentEmail);
+  $('#inboxCount').textContent = '…';
+  try{
+    const r=await fetch(`${api}/emails/${email}?limit=50`); const j=await r.json();
+    const items = j.result || j.data || [];
+    renderList(items);
+  }catch(e){ renderList([]); }
+}
+function renderList(items){
+  const list=$('#list'), empty=$('#empty'), count=$('#inboxCount');
+  count.textContent = String(items.length);
+  $('#inboxMeta').textContent = `${items.length} emails • ${currentEmail}`;
+  if(!items.length){ list.innerHTML=''; empty.classList.remove('hidden'); return; }
+  empty.classList.add('hidden');
+  list.innerHTML = items.map(it=>`
+    <button data-id="${esc(it.id)}" class="email-card w-full text-left px-5 py-4 hover:bg-zinc-50 flex gap-3 ${selectedId===it.id?'bg-[#f6f4ef]':''}">
+      <div class="w-9 h-9 rounded-full bg-zinc-900 text-white grid place-items-center text-xs font-semibold shrink-0">${esc((it.from_address||'?')[0].toUpperCase())}</div>
+      <div class="min-w-0 flex-1">
+        <div class="flex items-start justify-between gap-2">
+          <div class="font-medium text-[14px] leading-tight truncate">${esc(it.from_address||'unknown')}</div>
+          <div class="text-[11px] font-mono text-zinc-500 shrink-0">${fmtTime(it.received_at)}</div>
+        </div>
+        <div class="text-[13px] font-medium truncate mt-0.5">${esc(it.subject||'(no subject)')}</div>
+        <div class="text-xs text-zinc-500 truncate">${esc((it.text_content||it.html_content||'').slice(0,90))}</div>
+        <div class="mt-2 flex items-center gap-2">
+          ${it.has_attachments?`<span class="text-[11px] px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 font-medium">${it.attachment_count} attachment${it.attachment_count>1?'s':''}</span>`:''}
+          <span class="text-[11px] font-mono text-zinc-400">${esc(it.id.slice(0,8))}</span>
+          <span class="ml-auto text-[11px] text-zinc-400">open →</span>
+        </div>
+      </div>
+    </button>
+  `).join('');
+  list.querySelectorAll('button[data-id]').forEach(b=> b.addEventListener('click',()=> openEmail(b.dataset.id)));
+}
+
+async function openEmail(id){
+  selectedId=id;
+  document.querySelectorAll('#list button').forEach(b=> b.classList.toggle('bg-[#f6f4ef]', b.dataset.id===id));
+  $('#detail').innerHTML = '<div class="shimmer h-[160px] rounded-xl"></div>';
+  $('#btnCloseDetail').classList.remove('hidden');
+  document.getElementById('detailWrap').scrollIntoView({behavior:'smooth', block:'start'});
+  try{
+    const r=await fetch(`${api}/inbox/${id}`); const j=await r.json();
+    const em=j.result || j.data || j;
+    const r2=await fetch(`${api}/inbox/${id}/attachments`).then(x=>x.json()).catch(()=>({result:[]}));
+    const atts=r2.result||r2.data||[];
+    const html = em.html_content || '';
+    const text = em.text_content || '';
+    // keep html safe in iframe srcdoc - full width, taller, resizable
+    const safe = html ? `<iframe sandbox="allow-same-origin allow-popups" srcdoc="${esc(html).replace(/"/g,'&quot;')}" class="w-full h-[72vh] min-h-[480px] rounded-none sm:rounded-xl border-0 sm:border border-zinc-200 bg-white" style="resize:vertical;overflow:auto"></iframe>` : `<pre class="whitespace-pre-wrap break-words text-sm leading-6 bg-[#fbfaf7] border border-zinc-200 rounded-xl p-4 m-4">${esc(text||'(no content)')}</pre>`;
+    const delBtn = `<button onclick="deleteOne('${esc(id)}')" class="text-xs px-3 py-1.5 rounded-full bg-rose-600 text-white hover:bg-rose-700">Delete</button>`;
+    $('#detail').innerHTML = `
+      <div class="space-y-0">
+        <div class="p-4 sm:p-5 space-y-3 border-b border-zinc-100 bg-zinc-50/50">
+          <div class="flex items-center justify-between gap-2"><div class="text-xs font-mono text-zinc-500 break-all">${esc(em.id)}</div>${delBtn}</div>
+          <div class="grid sm:grid-cols-2 gap-2 text-sm">
+            <div><span class="text-zinc-500">From</span> <span class="font-mono font-medium break-all">${esc(em.from_address)}</span></div>
+            <div><span class="text-zinc-500">To</span> <span class="font-mono break-all">${esc(em.to_address)}</span></div>
+          </div>
+          <div class="text-sm"><span class="text-zinc-500">Subject</span> <span class="font-medium">${esc(em.subject||'(no subject)')}</span></div>
+          <div class="text-xs font-mono text-zinc-500">${fmtTime(em.received_at)} • ${em.has_attachments? em.attachment_count+' attachment(s)': 'no attachments'}</div>
+          ${atts.length? `<div class="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm">
+            <div class="font-medium text-amber-800">Attachments (${atts.length})</div>
+            <div class="mt-2 grid gap-2">
+              ${atts.map(a=>`<div class="flex items-center gap-2 bg-white border border-amber-200 rounded-lg px-3 py-2">
+                <span class="text-xs font-mono truncate flex-1">${esc(a.filename)} • ${(a.size/1024).toFixed(1)}KB • ${esc(a.content_type)}</span>
+                <a href="${api}/attachments/${esc(a.id)}" target="_blank" class="text-xs px-3 py-1 rounded-full bg-zinc-900 text-white">Download</a>
+                <button onclick="deleteAtt('${esc(a.id)}')" class="text-xs px-2 py-1 rounded-full border border-zinc-200">Del</button>
+              </div>`).join('')}
+            </div>
+          </div>`:''}
+          ${text && html ? `<details><summary class="text-xs font-medium cursor-pointer">Show text version</summary><pre class="mt-2 whitespace-pre-wrap break-words text-xs leading-5 bg-white border border-zinc-200 rounded-xl p-3">${esc(text)}</pre></details>`:''}
+        </div>
+        <div class="">${safe}</div>
+      </div>
+    `;
+  }catch(e){ $('#detail').innerHTML = '<div class="text-sm text-rose-600">Gagal load email.</div>'; }
+}
+window.deleteOne = async (id)=>{
+  if(!confirm('Delete this email?')) return;
+  await fetch(`${api}/inbox/${id}`,{method:'DELETE'});
+  selectedId=null; $('#detail').innerHTML='<div class="text-sm text-zinc-500">Deleted.</div>'; fetchInbox();
+}
+window.deleteAtt = async (id)=>{
+  if(!confirm('Delete attachment?')) return;
+  await fetch(`${api}/attachments/${id}`,{method:'DELETE'});
+  if(selectedId) openEmail(selectedId);
+}
+
+// events
+$('#btnCopy').addEventListener('click', async ()=>{
+  await navigator.clipboard.writeText(currentEmail);
+  const t=$('#copyToast'); t.classList.remove('hidden'); setTimeout(()=>t.classList.add('hidden'),1200);
+});
+$('#btnRandom').addEventListener('click',()=>{ setAddress(rand(10), $('#domainSel').value); });
+$('#btnRefresh').addEventListener('click', fetchInbox);
+$('#prefix').addEventListener('change', updateAddress);
+$('#prefix').addEventListener('keydown', e=>{ if(e.key==='Enter') updateAddress(); });
+$('#domainSel').addEventListener('change', updateAddress);
+$('#btnClearHistory').addEventListener('click',()=>{
+  if(!confirm('Clear history?')) return;
+  localStorage.removeItem('tm_history');
+  renderHistory();
+});
+$('#btnDeleteAll').addEventListener('click', async ()=>{
+  if(!confirm(`Delete all emails for ${currentEmail}?`)) return;
+  await fetch(`${api}/emails/${encodeURIComponent(currentEmail)}`,{method:'DELETE'});
+  fetchInbox(); $('#detail').innerHTML='<div class="text-sm text-zinc-500">All deleted.</div>';
+});
+$('#btnCloseDetail').addEventListener('click',()=>{ selectedId=null; $('#detail').innerHTML='<div class="text-sm text-zinc-500">Pilih email di sebelah kiri.</div>'; $('#btnCloseDetail').classList.add('hidden'); document.querySelectorAll('#list button').forEach(b=>b.classList.remove('bg-[#f6f4ef]')); });
+$('#autoRefresh').addEventListener('change', e=>{ if(e.target.checked) startPoll(); else stopPoll(); });
+function startPoll(){ stopPoll(); timer=setInterval(fetchInbox,5000); }
+function stopPoll(){ if(timer) clearInterval(timer); timer=null; }
+
+// init
+(async()=>{
+  await checkHealth();
+  await loadDomains();
+  renderHistory();
+  const hash = decodeURIComponent(location.hash.slice(1));
+  const savedPrefix = localStorage.getItem('tm_prefix');
+  if(hash && hash.includes('@')){ const [p,d]=hash.split('@'); setAddress(p,d); }
+  else if(savedPrefix){ setAddress(savedPrefix, localStorage.getItem('tm_domain')); }
+  else { setAddress(rand(8), $('#domainSel').value||'dst.my.id'); }
+  renderHistory();
+  startPoll();
+})();
+</script>
+</body>
+</html>

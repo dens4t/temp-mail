@@ -1,53 +1,21 @@
-// List of supported email domains
+// List of supported email domains - only owned domains
 
 export const DOMAINS = [
 	{
-		owner: "vwh",
-		domain: "barid.site",
+		owner: "densat98",
+		domain: "dst.my.id",
 	},
 	{
-		owner: "vwh",
-		domain: "vwh.sh",
+		owner: "densat98",
+		domain: "ura.web.id",
 	},
 	{
-		owner: "vwh",
-		domain: "iusearch.lol",
+		owner: "densat98",
+		domain: "dnst.my.id",
 	},
 	{
-		owner: "mm6x",
-		domain: "lifetalk.us",
-	},
-	{
-		owner: "z44d",
-		domain: "z44d.pro",
-	},
-	{
-		owner: "blockton",
-		domain: "wael.fun",
-	},
-	{
-		owner: "HprideH",
-		domain: "tawbah.site",
-	},
-	{
-		owner: "HprideH",
-		domain: "kuruptd.ink",
-	},
-	{
-		owner: "oxno1",
-		domain: "oxno1.space",
-	},
-	{
-		owner: "None",
-		domain: "hacktivc.com",
-	},
-	{
-		owner: "None",
-		domain: "lealaom.xyz",
-	},
-	{
-		owner: "None",
-		domain: "leala.site",
+		owner: "densat98",
+		domain: "dlhptk.my.id",
 	},
 ] satisfies {
 	owner: string;

@@ -104,6 +104,21 @@ export async function deleteOldEmails(db: D1Database, timestamp: number) {
 }
 
 /**
+ * Delete ALL emails and attachments (full wipe - for 24h cron)
+ */
+export async function deleteAllEmails(db: D1Database) {
+	try {
+		// Delete attachments first (FK), then emails
+		await db.prepare("DELETE FROM attachments").run();
+		const { success, error, meta } = await db.prepare("DELETE FROM emails").run();
+		return { success, error, meta };
+	} catch (e: unknown) {
+		const error = e instanceof Error ? e : new Error(String(e));
+		return { success: false, error: error, meta: undefined };
+	}
+}
+
+/**
  * Delete emails by recipient email address
  */
 export async function deleteEmailsByRecipient(db: D1Database, emailAddress: string) {

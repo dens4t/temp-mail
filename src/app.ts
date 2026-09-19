@@ -4,6 +4,7 @@ import emailRoutes from "@/routes/emailRoutes";
 import { setupDocumentation } from "@/utils/docs";
 import { logError } from "@/utils/logger";
 import corsMiddleware from "./middlewares/cors";
+import rateLimitMiddleware from "./middlewares/rateLimit";
 import healthRoutes from "./routes/healthRoutes";
 import { ERR } from "./utils/http";
 
@@ -11,6 +12,7 @@ const app = new OpenAPIHono<{ Bindings: CloudflareBindings }>();
 
 // --- Middlewares ---
 app.use(corsMiddleware);
+app.use(rateLimitMiddleware);
 
 // --- Error handling ---
 app.onError((err, c) => {

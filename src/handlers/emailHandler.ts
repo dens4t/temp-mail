@@ -76,15 +76,41 @@ function validateAttachments(attachments: EmailAttachment[], emailId: string): E
 /**
  * Cloudflare email router handler - optimized version
  */
+const MAX_RAW_SIZE = 5 * 1024 * 1024; // 5MB
+
 export async function handleEmail(
 	message: ForwardableEmailMessage,
 	env: CloudflareBindings,
 	ctx: ExecutionContext,
 ) {
 	try {
+		console.log(`Email received: from=${message.from} to=${message.to} size=${(message as any).rawSize ?? "unknown"}`);
 		const timer = new PerformanceTimer("email-processing");
 		const emailId = createId();
-		const email = await PostalMime.parse(message.raw);
+		// Handle both string and ReadableStream for message.raw (Cloudflare can send either)
+		let rawForParse: string | ReadableStream | ArrayBuffer = message.raw as any;
+		// 5MB check - read stream if needed
+		if (typeof rawForParse === "string") {
+			if (new TextEncoder().encode(rawForParse).byteLength > MAX_RAW_SIZE) {
+				console.warn(`Reject email >5MB: from=${message.from} to=${message.to}`);
+				return;
+			}
+		} else if (rawForParse instanceof ArrayBuffer) {
+			if (rawForParse.byteLength > MAX_RAW_SIZE) {
+				console.warn(`Reject email >5MB: from=${message.from} to=${message.to}`);
+				return;
+			}
+		} else if (rawForParse && typeof (rawForParse as any).getReader === "function") {
+			// ReadableStream - need to tee for size check and parse
+			const [s1, s2] = (rawForParse as ReadableStream).tee();
+			const text = await new Response(s1).text();
+			if (new TextEncoder().encode(text).byteLength > MAX_RAW_SIZE) {
+				console.warn(`Reject email >5MB stream: from=${message.from} to=${message.to}`);
+				return;
+			}
+			rawForParse = text;
+		}
+		const email = await PostalMime.parse(rawForParse as any);
 
 		// Process email content
 		const { htmlContent, textContent } = processEmailContent(
