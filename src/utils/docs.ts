@@ -47,8 +47,16 @@ ${`\n${Array.from(DOMAINS_SET)
 		},
 		servers: [
 			{
+				url: "https://mail.dst.my.id",
+				description: "Primary - dst.my.id (custom)",
+			},
+			{
+				url: "https://temp-mail.densat98.workers.dev",
+				description: "Fallback workers.dev",
+			},
+			{
 				url: "https://api.barid.site",
-				description: "Production server",
+				description: "Upstream (vwh)",
 			},
 		],
 		tags: [
@@ -72,9 +80,22 @@ ${`\n${Array.from(DOMAINS_SET)
 	// Swagger UI - Traditional documentation
 	app.get("/swagger", swaggerUI({ url: "/openapi.json" }));
 
-	// Scalar - Modern documentation
+	// Public API docs at /api (dedicated, not conflicting with assets at /)
 	app.get(
-		"/",
+		"/api",
+		Scalar({
+			url: "/openapi.json",
+			theme: "purple",
+			pageTitle: "dst.my.id Temp Mail API",
+		}),
+	);
+
+	// Keep /docs as alias for /api
+	app.get("/docs", (c) => c.redirect("/api", 302));
+
+	// Scalar at root fallback (only used when assets not found - kept for workers.dev without assets)
+	app.get(
+		"/scalar",
 		Scalar({
 			url: "/openapi.json",
 			theme: "purple",
