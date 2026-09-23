@@ -90,8 +90,18 @@ ${`\n${Array.from(DOMAINS_SET)
 		}),
 	);
 
-	// Keep /docs as alias for /api
-	app.get("/docs", (c) => c.redirect("/api", 302));
+	// Keep /docs as alias - preserve hash: if hash looks like email (@) go to web client at /, else to /api
+	app.get("/docs", (c) =>
+		c.html(
+			`<!doctype html><meta charset="utf-8"><title>Redirect</title><script>
+const h=location.hash||"";
+if(h.includes("@")||h.includes("%40")) location.replace("/"+h);
+else location.replace("/api"+h);
+<\/script><p>Redirecting… <a href="/api">/api</a> | <a href="/">/</a></p>`,
+			200,
+			{ "Content-Type": "text/html; charset=utf-8" },
+		),
+	);
 
 	// Scalar at root fallback (only used when assets not found - kept for workers.dev without assets)
 	app.get(
